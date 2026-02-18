@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ include "coffee-shop.fullname" . }}
+    labels:
+        app: {{ include "coffee-shop.name" . }}
+spec:
+    replicas: {{ .Values.replicaCount | default 2 }}
+    selector:
+        matchLabels:
+            app: {{ include "coffee-shop.name" . }}
+    template:
+        metadata:
+            labels:
+                app: {{ include "coffee-shop.name" . }}
+        spec:
+            containers:
+                - name: python-app
+                  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+                  imagePullPolicy: {{ .Values.image.pullPolicy }}
+                  ports:
+                    - containerPort: {{ .Values.service.targetPort }}
+                      name: http
+                  resources: 
+                    {{ toYaml .Values.resources | nindent 20 }}
+                  livenessProbe:
+                    httpGet:
+                        path: /health
+                        port: 8000
+                    initialDelaySeconds: 10
+                    periodSeconds: 10
+                  readinessProbe:
+                    httpGet:
+                        path: /health
+                        port: 8000
+                    initialDelaySeconds: 10
+                    

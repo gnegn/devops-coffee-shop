@@ -1,0 +1,16 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+    name: {{ include "coffee-shop.fullname" . }}-monitor
+    labels:
+        release: monitor
+spec:
+    selector:
+        matchLabels:
+            app: {{ include "coffee-shop.name" . }}
+    endpoints:
+        - port: http
+          interval: {{ .Values.metrics.serviceMonitor.interval }}
+          path: {{ .Values.metrics.serviceMonitor.path }}
+{{- end }}

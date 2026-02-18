@@ -1,0 +1,28 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+.terraform.lock.hcl
+crash.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
