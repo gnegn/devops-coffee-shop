@@ -1,1 +1,2 @@
 curl -v -H "Host: coffeeshop.local" http://localhost:8080/
+aws eks update-kubeconfig --region eu-north-1 --name devops-coffee-shop-cluster

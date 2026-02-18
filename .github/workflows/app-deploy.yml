@@ -1,0 +1,60 @@
+name: "Build and Deploy Application"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'k8s/**'
+  workflow_dispatch:
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          aws-region: eu-north-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        
+      - name: Build and Push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: coffee-shop
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f app/Dockerfile ./app
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # Додатково оновлюємо latest для зручності
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.12.0
+          
+      - name: Update kubectl context
+        run: |
+          aws eks update-kubeconfig --region eu-north-1 --name coffee-shop-cluster
+
+      - name: Deploy to Kubernetes
+        run: |
+          helm upgrade --install coffee-shop ./k8s \
+            --set image.repository=${{ steps.login-ecr.outputs.registry }}/coffee-shop \
+            --namespace default \
+            --set image.tag=${{ github.sha }} \
+            --wait

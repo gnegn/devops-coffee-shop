@@ -1,37 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: {{ include "coffee-shop.fullname" . }}
-    labels:
-        app: {{ include "coffee-shop.name" . }}
+  name: {{ include "coffee-shop.fullname" . }}
+  labels:
+    {{- include "coffee-shop.labels" . | nindent 4 }}
 spec:
-    replicas: {{ .Values.replicaCount | default 2 }}
-    selector:
-        matchLabels:
-            app: {{ include "coffee-shop.name" . }}
-    template:
-        metadata:
-            labels:
-                app: {{ include "coffee-shop.name" . }}
-        spec:
-            containers:
-                - name: python-app
-                  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-                  imagePullPolicy: {{ .Values.image.pullPolicy }}
-                  ports:
-                    - containerPort: {{ .Values.service.targetPort }}
-                      name: http
-                  resources: 
-                    {{ toYaml .Values.resources | nindent 20 }}
-                  livenessProbe:
-                    httpGet:
-                        path: /health
-                        port: 8000
-                    initialDelaySeconds: 10
-                    periodSeconds: 10
-                  readinessProbe:
-                    httpGet:
-                        path: /health
-                        port: 8000
-                    initialDelaySeconds: 10
-                    
+  replicas: {{ .Values.replicaCount | default 2 }}
+  selector:
+    matchLabels:
+      app: {{ include "coffee-shop.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "coffee-shop.name" . }}
+    spec:
+      containers:
+        - name: python-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+              name: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.targetPort }}
+            initialDelaySeconds: 10

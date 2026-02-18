@@ -1,16 +1,28 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-    name: {{ include "coffee-shop.fullname" . }}
+  name: {{ include "coffee-shop.fullname" . }}-combined
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
-    rules:
-        - host: {{ .Values.ingress.host }}
-          http:
-            paths:
-                - path: {{ .Values.ingress.path }}
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: {{ include "coffee-shop.fullname" . }}
-                      port:
-                        number: {{ .Values.service.port }}
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "coffee-shop.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+          {{- if .Values.metrics.enabled }}
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: monitor-grafana 
+                port:
+                  number: 80
+          {{- end }}

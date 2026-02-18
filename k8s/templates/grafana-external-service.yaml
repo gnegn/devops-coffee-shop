@@ -1,0 +1,9 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitor-grafana
+spec:
+  type: ExternalName
+  externalName: monitor-grafana.monitoring.svc.cluster.local
+{{- end }}

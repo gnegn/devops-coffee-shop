@@ -18,11 +18,22 @@ service:
   port: 80
   targetPort: 8000
 
-ingress:
-  enabled: true
-  host: coffeeshop.local
-  path: /
+# Uncomment for local development with Minikube
+# Comment ALB Ingress and ServiceMonitor sections if using Minikube
 
+#ingress:
+#  enabled: true
+#  className: "nginx"
+#  host: "" 
+#  path: /
+#  annotations:
+
+ingress:
+  className: "alb"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    
 metrics:
   enabled: true
   serviceMonitor:

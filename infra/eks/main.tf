@@ -3,12 +3,33 @@ module "eks" {
   version = "~> 20.8.4"
 
   cluster_name    = "${var.name}-cluster"
-  cluster_version = "1.28"
+  cluster_version = "1.32"
 
   vpc_id                                   = var.vpc_id
   subnet_ids                               = var.public_subnets
   cluster_endpoint_public_access           = true
   enable_cluster_creator_admin_permissions = true
+  enable_irsa = true
+  
+  cluster_addons = {
+    aws-ebs-csi-driver = {
+      most_recent = true
+    }
+  }
+
+  access_entries = {
+    admin_user = {
+      principal_arn     = var.admin_arn
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
 
   eks_managed_node_groups = {
     spot_nodes = {
@@ -17,6 +38,11 @@ module "eks" {
       min_size       = var.min_size
       max_size       = var.max_size
       desired_size   = var.desired_size
+      
+      iam_role_additional_policies = {
+        ebs_csi_policy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
+
       labels = {
         role = "worker"
       }
@@ -42,3 +68,4 @@ module "eks" {
     }
   }
 }
+
